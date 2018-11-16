@@ -3,17 +3,17 @@
 # Install Kodi build dependencies for Debian unstable (October 2018).
 
 # Install build tools
-apt install \
+apt-get install -y \
     build-essential debhelper \
     autoconf automake autopoint gettext autotools-dev cmake curl \
     default-jre doxygen gawk gdc gperf libtool \
     lsb-release swig unzip yasm zip ccache
 
 # Python stuff
-apt install python-dev python-pil
+apt-get install -y python-dev python-pil
 
 # Install build libraries (alphabetical order0
-apt install \
+apt-get install -y \
     libasound2-dev \
     libass-dev \
     libavahi-client-dev \
