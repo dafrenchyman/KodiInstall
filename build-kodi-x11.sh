@@ -2,8 +2,7 @@
 
 # Builds Kodi for X11.
 
-mkdir -p /home/kodi/kodi-build
-cd /home/kodi/kodi-build
+cd /root/kodi-source
 
 CORES=`nproc --all`
 

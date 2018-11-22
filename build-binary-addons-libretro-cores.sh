@@ -8,13 +8,13 @@ CORES=`nproc --all`
 # Define useful functions
 compile_core () {
     echo "Compiling core $1 ..."
-    cd /home/kodi/kodi-source
-    rm -f /home/kodi/kodi-source/tools/depends/target/binary-addons/.installed-native
-    make -j${CORES} -C tools/depends/target/binary-addons PREFIX=/home/kodi/bin-kodi ADDONS="$1"
+    cd /root/kodi-source
+    rm -f /root/kodi-source/tools/depends/target/binary-addons/.installed-native
+    make -j${CORES} -C tools/depends/target/binary-addons PREFIX=/usr/local ADDONS="$1" #PREFIX=/home/kodi/bin-kodi 
 }
 
 # Configure Kodi standard repository for binary addons.
-repofname="/home/kodi/kodi-source/cmake/addons/bootstrap/repositories/binary-addons.txt"
+repofname="/root/kodi-source/cmake/addons/bootstrap/repositories/binary-addons.txt"
 bin_addons_repo="binary-addons https://github.com/kodi-game/repo-binary-addons.git retroplayer"
 rm -f $repofname
 echo $bin_addons_repo >> $repofname

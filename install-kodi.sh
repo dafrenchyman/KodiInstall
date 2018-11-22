@@ -2,6 +2,6 @@
 
 # Install Kodi into local directory.
 
-mkdir -p /home/kodi/bin-kodi
-cd /home/kodi/kodi-build
+cd /root/kodi-source
+
 make install
