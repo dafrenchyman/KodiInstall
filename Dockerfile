@@ -49,19 +49,4 @@ RUN /root/NVIDIA-Linux-x86_64-415.13.run --accept-license --no-runlevel-check  -
 
 ENTRYPOINT ["/usr/local/bin/kodi-standalone"]
 
-COPY ChronoTrigger.sfc /home/kodi/ChronoTrigger.sfc
-
-# sudo docker build -t kodi .
-# sudo x11docker --xorg --vt 8 --gpu --wm none --alsa --user=RETAIN kodi
-# sudo x11docker --xorg --vt 8 --hostnet --wm none --pulseaudio -- "--cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH" kodi
-
-# sudo x11docker --xorg --vt 8 --pulseaudio kodi
-# sudo x11docker --xorg --vt 8 --pulseaudio --wm none --gpu erichough/kodi
-
-# sudo x11docker --xorg --vt 8 --hostnet  --gpu --wm none --alsa --user=RETAIN kodi
-
-# sudo x11docker --xorg --vt 8 --gpu --wm none --alsa -- "--privileged -v /dev/bus/usb:/dev/bus/usb" kodi
-# sudo x11docker --xorg --vt 8 --gpu --wm none -- "--device=/dev/bus/usb:/dev/bus/usb:rwm" kodi
-
-
 
