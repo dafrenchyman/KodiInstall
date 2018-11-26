@@ -3,6 +3,9 @@
 # Inputs
 KODI_CONTAINER_NAME=kodi
 
+# Copy bios' over
+cp ./bios/scph*.bin ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+
 # Mount all the samba shares you want
 
 ################################################################################
@@ -22,9 +25,8 @@ mount_cifs () {
 # Open Media Vault Shares
 mount_cifs $KODI_CONTAINER_NAME "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc"
 
-#DISPLAY=":0.1" sudo x11docker --home --hostdisplay --gpu --alsa -- "--privileged" kodi &
 export DISPLAY=":0.1"
-sleep 3
+sleep 1
 
 sudo x11docker --home --hostdisplay --desktop --gpu --alsa --wm none -- --privileged -v /dev/bus/usb:/dev/bus/usb -v /etc/localtime:/etc/localtime:ro -- kodi &
 sleep 5
