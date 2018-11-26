@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y git
 RUN apt-get install -y kmod xz-utils
 
 # Install other dependencies #
-RUN apt-get install -y x-window-system mesa-utils mesa-utils-extra libxv1 binutils libasound2 libpulse0 pulseaudio tzdata smbclient nfs-common
+RUN apt-get install -y x-window-system mesa-utils mesa-utils-extra libxv1 binutils libasound2 libpulse0 pulseaudio tzdata smbclient nfs-common cifs-utils
 
 # Install nvidia driver
 #COPY NVIDIA-Linux-x86_64-415.13.run /root/NVIDIA-Linux-x86_64-415.13.run 

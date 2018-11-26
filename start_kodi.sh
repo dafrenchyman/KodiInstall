@@ -19,20 +19,16 @@ mount_cifs () {
   sudo mount -t cifs //$HOST/$SHARE/ ~/x11docker/$KODI_CONTAINER/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
 }
 
-mount_cifs $KODI_CONTAINER_NAME "openmediavault.local" "consoles_disk23" "xbmc" "xbmc"
+# Open Media Vault Shares
+mount_cifs $KODI_CONTAINER_NAME "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc"
 
 #DISPLAY=":0.1" sudo x11docker --home --hostdisplay --gpu --alsa -- "--privileged" kodi &
 export DISPLAY=":0.1"
 sleep 3
 
-
-
-#sudo x11docker --home --hostdisplay --gpu --alsa -- "--privileged -v /dev/bus/usb:/dev/bus/usb" kodi &
-#sudo x11docker --home --hostdisplay --gpu --alsa -- --privileged -v /dev/bus/usb:/dev/bus/usb -- kodi &
-sudo x11docker --home --hostdisplay --gpu --alsa --wm none -- --privileged -v /dev/bus/usb:/dev/bus/usb -- kodi &
+sudo x11docker --home --hostdisplay --desktop --gpu --alsa --wm none -- --privileged -v /dev/bus/usb:/dev/bus/usb -v /etc/localtime:/etc/localtime:ro -- kodi &
 sleep 5
 export DISPLAY=":0.0"
-mate-panel --reset
 
 
 
