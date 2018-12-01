@@ -4,6 +4,7 @@
 KODI_CONTAINER_NAME=kodi
 
 # Copy bios' over
+mkdir -p ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
 cp ./bios/scph*.bin ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
 
 # Mount all the samba shares you want
