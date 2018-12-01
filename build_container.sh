@@ -15,4 +15,4 @@ sudo bash /tmp/x11docker --update
 rm /tmp/x11docker
 
 # Build the docker container
-sudo docker build --no-cache -t kodi_test .
+sudo docker build --no-cache -t kodi .
