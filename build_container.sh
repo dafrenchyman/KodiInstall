@@ -9,5 +9,10 @@ else
 fi
 chmod +x nvidia.run
 
+# Install x11docker (https://github.com/mviereck/x11docker)
+wget https://raw.githubusercontent.com/mviereck/x11docker/master/x11docker -O /tmp/x11docker
+sudo bash /tmp/x11docker --update
+rm /tmp/x11docker
+
 # Build the docker container
 sudo docker build --no-cache -t kodi_test .
