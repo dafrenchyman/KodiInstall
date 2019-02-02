@@ -1,11 +1,16 @@
 #!/bin/bash
 
 # Inputs
-KODI_CONTAINER_NAME=kodi
 
-# Copy bios' over
-mkdir -p ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
-cp ./bios/scph*.bin ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+
+copy_bioses () {
+    KODI_PROCESS_NAME=$1
+    for i in "${KODI_PROCESS_NAME[@]}"
+    do
+        mkdir -p ~/x11docker/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+        cp ./bios/scph*.bin ~/x11docker/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+    done
+}
 
 # Mount all the samba shares you want
 
@@ -14,24 +19,112 @@ cp ./bios/scph*.bin ~/x11docker/$KODI_CONTAINER_NAME/.kodi/userdata/addon_data/g
 # sudo apt install -y cifs-utils
 ################################################################################
 mount_cifs () {
-  KODI_CONTAINER=$1
-  HOST=$2
-  SHARE=$3
-  CIFS_USER=$4
-  CIFS_PASS=$5
-  mkdir -p ~/x11docker/$KODI_CONTAINER/shares/$HOST/$SHARE
-  sudo mount -t cifs //$HOST/$SHARE/ ~/x11docker/$KODI_CONTAINER/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
+    local HOST=$1
+    local SHARE=$2
+    local CIFS_USER=$3
+    local CIFS_PASS=$4
+    shift
+    shift
+    shift
+    shift
+    local KODI_PROCESS_NAME=("$@")
+    for i in "${KODI_PROCESS_NAME[@]}"
+    do
+        echo "Docker image: ${i} share: $HOST/$SHARE"
+        mkdir -p ~/x11docker/$i/shares/$HOST/$SHARE
+        sudo mount -t cifs //$HOST/$SHARE/ ~/x11docker/$i/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
+    done
 }
 
+# Setup arrays that will store what we need
+KODI_DOCKER_NAMES=("kodi_living_room" "kodi_office")
+USB_PASSTHROUGH=("/dev/input/js1" "/dev/input/js0")
+DISPLAYS=(":0.2" ":0.1")
+
+# Kodi resources
+KODI_RESOURCES="kodi_resources"
+MARIADB_PASS="kodimaria"
+
+
+# Start mariadb (common db for the kodi instances)
+mkdir -p ~/${KODI_RESOURCES}/mariadb
+sudo docker run --name kodi-mariadb \
+     -v ~/${KODI_RESOURCES}/mariadb:/var/lib/mysql \
+     -v /etc/localtime:/etc/localtime:ro \
+     -e MYSQL_ROOT_PASSWORD=${MARIADB_PASS} -d mariadb:latest
+MARIA_DOCKER=`sudo docker ps | grep kodi-mariadb | cut -f1 -d ' '`
+
+sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "CREATE USER IF NOT EXISTS 'kodi' IDENTIFIED BY 'kodi';"
+sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "SET PASSWORD FOR 'kodi'@'%' = PASSWORD('${MARIADB_PASS}');"
+sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "GRANT ALL ON *.* TO 'kodi';"
+sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "flush privileges;"
+
+MARIA_DB_IP=`sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' kodi-mariadb`
+
+# replace with the correct IP in the settings
+sed 's/'"<pass>kodi<\/pass>"'/'"<pass>${MARIADB_PASS}<\/pass>"'/g' < advancedsettings_template.xml > advancedsettings.xml
+sed -i 's/'"\*\*\*.\*\*\*.\*\*\*.\*\*\*"'/'"${MARIA_DB_IP}"'/g' advancedsettings.xml
+
+# Copy this file over to each kodi
+
+for i in "${KODI_DOCKER_NAMES[@]}"
+do
+    mkdir -p ~/x11docker/$i/.kodi/userdata
+    cp ./advancedsettings.xml ~/x11docker/$i/.kodi/userdata/
+done
+
+# Copy bios' over
+copy_bioses ${KODI_DOCKER_NAMES[@]}
+
 # Open Media Vault Shares
-mount_cifs $KODI_CONTAINER_NAME "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc"
+mount_cifs "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
 
-export DISPLAY=":0.1"
-sleep 1
+# Start up the different kodi instances
+for (( i = 0 ; i < ${#KODI_DOCKER_NAMES[@]} ; i=$i+1 ));
+do
+    CURR_DOCKER=${KODI_DOCKER_NAMES[${i}]}
+    CURR_USB_PASSTHROUGH=${USB_PASSTHROUGH[${i}]}
+    CURR_DISPLAY=${DISPLAYS[${i}]}
+    echo
+    echo "#####################################################################"
+    echo "Setting up $CURR_DOCKER ON ${CURR_DISPLAY}"
+    echo "USB device: ${CURR_USB_PASSTHROUGH}"
+    echo "#####################################################################"
+    echo
 
-sudo x11docker --home --hostdisplay --desktop --gpu --alsa --wm none -- --privileged -v /dev/bus/usb:/dev/bus/usb -v /etc/localtime:/etc/localtime:ro -- kodi &
-sleep 5
-export DISPLAY=":0.0"
+    export DISPLAY="${CURR_DISPLAY}"
+    sleep 1
+
+    sudo x11docker --homedir ~/x11docker/${CURR_DOCKER} \
+         --hostdisplay --desktop --gpu --alsa --wm none -- \
+         --device=${CURR_USB_PASSTHROUGH} \
+         -v /etc/localtime:/etc/localtime:ro \
+         --link kodi-mariadb:mysql \
+         -- kodi &
+
+    sleep 5
+
+    #export DISPLAY=":0.0"
+done
 
 
+export DISPLAY=":0.0" 
+
+
+test () {
+    sudo docker run -t -i --device=/dev/input/event17 \
+    --device=/dev/input/js1 \
+    --device=/dev/bus/usb/001/007 \
+    -v /dev/input:/dev/input ubuntu bash
+
+
+    sudo docker run -t -i \
+    --device=/dev/input \
+    -v /dev/input:/dev/input ubuntu bash
+
+    # Useful to figure out which joystick to send to a kodi
+    apt-get update
+    apt-get install joystick -y
+    jstest /dev/input/js0
+}
 
