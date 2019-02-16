@@ -1,23 +1,52 @@
 #!/bin/bash
 
+################################################################################
 # Inputs
+################################################################################
+
+# Setup arrays that will store what we need
+KODI_DOCKER_NAMES=("kodi_living_room" "kodi_office")
+USB_PASSTHROUGH=("/dev/input/js1" "/dev/input/js0")
+DISPLAYS=(":0.2" ":0.1")
+
+# Kodi resources
+KODI_RESOURCES="kodi_resources"
+MARIADB_PASS="kodimaria"
 
 
+################################################################################
+# Functions
+################################################################################
+
+# Copy emulator bioses
 copy_bioses () {
     KODI_PROCESS_NAME=$1
     for i in "${KODI_PROCESS_NAME[@]}"
     do
-        mkdir -p ~/x11docker/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
-        cp ./bios/scph*.bin ~/x11docker/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+        # Copy PSX bxos
+        mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+        cp ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+        cp ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.beetle-psx/resources/system
+
+        # Copy Sega CD Bios
+        mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp ./bios/bios_CD_E.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp ./bios/bios_CD_U.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp ./bios/bios_CD_J.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+
+        # Master System
+        cp ./bios/bios_E.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp ./bios/bios_U.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp ./bios/bios_J.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+
+        # Game Gear
+        cp ./bios/bios.gg ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
     done
 }
 
 # Mount all the samba shares you want
-
-################################################################################
 # To be able to mount cifs shares you must have cifs-utils installed
 # sudo apt install -y cifs-utils
-################################################################################
 mount_cifs () {
     local HOST=$1
     local SHARE=$2
@@ -31,19 +60,10 @@ mount_cifs () {
     for i in "${KODI_PROCESS_NAME[@]}"
     do
         echo "Docker image: ${i} share: $HOST/$SHARE"
-        mkdir -p ~/x11docker/$i/shares/$HOST/$SHARE
-        sudo mount -t cifs //$HOST/$SHARE/ ~/x11docker/$i/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
+        mkdir -p ~/${KODI_RESOURCES}/$i/shares/$HOST/$SHARE
+        sudo mount -t cifs //$HOST/$SHARE/ ~/${KODI_RESOURCES}/$i/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
     done
 }
-
-# Setup arrays that will store what we need
-KODI_DOCKER_NAMES=("kodi_living_room" "kodi_office")
-USB_PASSTHROUGH=("/dev/input/js1" "/dev/input/js0")
-DISPLAYS=(":0.2" ":0.1")
-
-# Kodi resources
-KODI_RESOURCES="kodi_resources"
-MARIADB_PASS="kodimaria"
 
 
 # Start mariadb (common db for the kodi instances)
@@ -53,6 +73,7 @@ sudo docker run --name kodi-mariadb \
      -v /etc/localtime:/etc/localtime:ro \
      -e MYSQL_ROOT_PASSWORD=${MARIADB_PASS} -d mariadb:latest
 MARIA_DOCKER=`sudo docker ps | grep kodi-mariadb | cut -f1 -d ' '`
+sleep 5
 
 sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "CREATE USER IF NOT EXISTS 'kodi' IDENTIFIED BY 'kodi';"
 sudo docker exec -it kodi-mariadb mysql -p${MARIADB_PASS} -e "SET PASSWORD FOR 'kodi'@'%' = PASSWORD('${MARIADB_PASS}');"
@@ -69,8 +90,8 @@ sed -i 's/'"\*\*\*.\*\*\*.\*\*\*.\*\*\*"'/'"${MARIA_DB_IP}"'/g' advancedsettings
 
 for i in "${KODI_DOCKER_NAMES[@]}"
 do
-    mkdir -p ~/x11docker/$i/.kodi/userdata
-    cp ./advancedsettings.xml ~/x11docker/$i/.kodi/userdata/
+    mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata
+    cp ./advancedsettings.xml ~/${KODI_RESOURCES}/$i/.kodi/userdata/
 done
 
 # Copy bios' over
@@ -78,6 +99,9 @@ copy_bioses ${KODI_DOCKER_NAMES[@]}
 
 # Open Media Vault Shares
 mount_cifs "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
+
+# Minime Shares
+mount_cifs "minime.local" "snapdisk_8tb_03_shows" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
 
 # Start up the different kodi instances
 for (( i = 0 ; i < ${#KODI_DOCKER_NAMES[@]} ; i=$i+1 ));
@@ -95,7 +119,7 @@ do
     export DISPLAY="${CURR_DISPLAY}"
     sleep 1
 
-    sudo x11docker --homedir ~/x11docker/${CURR_DOCKER} \
+    sudo x11docker --homedir ~/${KODI_RESOURCES}/${CURR_DOCKER} \
          --hostdisplay --desktop --gpu --alsa --wm none -- \
          --device=${CURR_USB_PASSTHROUGH} \
          -v /etc/localtime:/etc/localtime:ro \
