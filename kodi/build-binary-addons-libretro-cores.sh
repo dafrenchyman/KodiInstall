@@ -90,3 +90,22 @@ compile_core game.libretro.vecx
 compile_core game.libretro.vice
 compile_core game.libretro.virtualjaguar
 compile_core game.libretro.yabause
+
+# Extras
+compile_core game.libretro.chailove
+compile_core game.libretro.fsuae
+compile_core game.libretro.mame
+compile_core game.libretro.mame2010
+compile_core game.libretro.mame2014
+compile_core game.libretro.mame2016
+compile_core game.libretro.mesen
+compile_core game.libretro.parallel_n64
+compile_core game.libretro.pcem
+compile_core game.libretro.reicast
+compile_core game.libretro.theodore
+#compile_core game.libretro.uae4arm
+
+
+
+
+

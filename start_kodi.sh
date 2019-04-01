@@ -5,9 +5,21 @@
 ################################################################################
 
 # Setup arrays that will store what we need
-KODI_DOCKER_NAMES=("kodi_living_room" "kodi_office")
-USB_PASSTHROUGH=("/dev/input/js1" "/dev/input/js0")
-DISPLAYS=(":0.2" ":0.1")
+KODI_LOCATIONS="OFFICE" # "LIVING", "BOTH"
+
+if [ $KODI_LOCATIONS == "BOTH" ]; then
+    KODI_DOCKER_NAMES=("kodi_living_room" "kodi_office")
+    USB_PASSTHROUGH=("js1" "js0")
+    DISPLAYS=(":0.2" ":0.1")
+elif [ $KODI_LOCATIONS == "LIVING" ]; then
+    KODI_DOCKER_NAMES=("kodi_living_room")
+    USB_PASSTHROUGH=("js1")
+    DISPLAYS=(":0.2")
+elif [ $KODI_LOCATIONS == "OFFICE" ]; then
+    KODI_DOCKER_NAMES=("kodi_office")
+    USB_PASSTHROUGH=("js0")
+    DISPLAYS=(":0.1")
+fi
 
 # Kodi resources
 KODI_RESOURCES="kodi_resources"
@@ -25,22 +37,41 @@ copy_bioses () {
     do
         # Copy PSX bxos
         mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
-        cp ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
-        cp ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.beetle-psx/resources/system
+        cp -u ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.pcsx-rearmed/resources/system/
+        cp -u ./bios/scph*.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.beetle-psx/resources/system
 
         # Copy Sega CD Bios
         mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
-        cp ./bios/bios_CD_E.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
-        cp ./bios/bios_CD_U.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
-        cp ./bios/bios_CD_J.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_CD_E.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_CD_U.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_CD_J.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
 
         # Master System
-        cp ./bios/bios_E.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
-        cp ./bios/bios_U.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
-        cp ./bios/bios_J.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_E.sms ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_U.sms ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios_J.sms ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
 
         # Game Gear
-        cp ./bios/bios.gg ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+        cp -u ./bios/bios.gg ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.genplus/resources/system/
+
+        # Dreamcast
+        mkdir -p ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/dc_boot.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/dc_flash.bin ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+
+        # Naomi
+        cp -u ./bios/hod2bios.zip ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/f355dlx.zip ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/f355bios.zip ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/airlbios.zip ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+        cp -u ./bios/awbios.zip ~/${KODI_RESOURCES}/$i/.kodi/userdata/addon_data/game.libretro.reicast/resources/system/dc/
+
+        # Playstaiton 2
+        mkdir -p ~/${KODI_RESOURCES}/$i/.config/PCSX2/bios/
+        cp -u ./bios/PS2/* ~/${KODI_RESOURCES}/$i/.config/PCSX2/bios/
+
     done
 }
 
@@ -100,6 +131,7 @@ copy_bioses ${KODI_DOCKER_NAMES[@]}
 # Open Media Vault Shares
 mount_cifs "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
 
+
 # Minime Shares
 mount_cifs "minime.local" "snapdisk_8tb_03_shows" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
 
@@ -109,10 +141,17 @@ do
     CURR_DOCKER=${KODI_DOCKER_NAMES[${i}]}
     CURR_USB_PASSTHROUGH=${USB_PASSTHROUGH[${i}]}
     CURR_DISPLAY=${DISPLAYS[${i}]}
+
+    # Get the event for the usb pass-through
+    CURR_USB_DEVICE_NAME=`ls -lah /dev/input/by-id/ | grep ${CURR_USB_PASSTHROUGH} | awk '{print $9}'`
+    CURR_USB_DEVICE_NAME=${CURR_USB_DEVICE_NAME/-joystick/}
+    CURR_USB_EVENT=`ls -lah /dev/input/by-id/ | grep $CURR_USB_DEVICE_NAME | grep event | awk '{print $11}'`
+    CURR_USB_EVENT=${CURR_USB_EVENT/..\//}
+
     echo
     echo "#####################################################################"
     echo "Setting up $CURR_DOCKER ON ${CURR_DISPLAY}"
-    echo "USB device: ${CURR_USB_PASSTHROUGH}"
+    echo "USB device: ${CURR_USB_PASSTHROUGH}, ${CURR_USB_EVENT}"
     echo "#####################################################################"
     echo
 
@@ -120,9 +159,13 @@ do
     sleep 1
 
     sudo x11docker --homedir ~/${KODI_RESOURCES}/${CURR_DOCKER} \
-         --hostdisplay --desktop --gpu --alsa --wm none -- \
-         --device=${CURR_USB_PASSTHROUGH} \
+         --hostdisplay --desktop --gpu --alsa --pulseaudio --wm=gnome -- \
+         --device=/dev/input/${CURR_USB_PASSTHROUGH} \
+         --device=/dev/input/${CURR_USB_EVENT} \
+         --privileged \
          -v /etc/localtime:/etc/localtime:ro \
+         -v /dev/bus/usb:/dev/bus/usb \
+         -v /dev/input:/dev/input \
          --link kodi-mariadb:mysql \
          -- kodi &
 
@@ -150,5 +193,18 @@ test () {
     apt-get update
     apt-get install joystick -y
     jstest /dev/input/js0
+
+
+
+
+
+    pulseaudio -k
+    pacmd set-card-profile 0 output:analog-stereo+output:hdmi-stereo+output:hdmi-stereo+output:hdmi-stereo
+
+
+
+
+
+
 }
 

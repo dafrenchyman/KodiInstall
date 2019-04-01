@@ -5,13 +5,14 @@ ENV DEBIAN_FRONTEND noninteractive
 # Install Git
 RUN apt-get update && apt-get install -y git
 
-# Install container dependencies
-RUN apt-get install -y kmod xz-utils
+# Install dependencies
+RUN apt-get install -y kmod xz-utils x-window-system mesa-utils mesa-utils-extra libxv1 binutils libasound2 libpulse0 pulseaudio tzdata smbclient nfs-common cifs-utils software-properties-common
 
-# Install other dependencies #
-RUN apt-get install -y x-window-system mesa-utils mesa-utils-extra libxv1 binutils libasound2 libpulse0 pulseaudio tzdata smbclient nfs-common cifs-utils
+######################################################
+# Kodi
+######################################################
 
-# Install build dependencies
+# Install Kodi build dependencies
 COPY ./kodi/install-build-dependencies-debian.sh /root/install-build-dependencies-debian.sh
 RUN /root/install-build-dependencies-debian.sh
 
@@ -42,6 +43,32 @@ RUN /root/kodi-source/build-binary-addons-all.sh
 # Build libretro cores
 COPY ./kodi/build-binary-addons-libretro-cores.sh /root/kodi-source/build-binary-addons-libretro-cores.sh
 RUN /root/kodi-source/build-binary-addons-libretro-cores.sh
+
+######################################################
+# Install Dolphin Emulator
+######################################################
+RUN apt-get install -y qt5-default libx11-xcb1
+RUN apt-add-repository ppa:dolphin-emu/ppa 
+RUN apt-get update
+RUN apt-get install -y dolphin-emu-master
+
+######################################################
+# Install pcsx2
+######################################################
+RUN dpkg --add-architecture i386 && \
+    add-apt-repository ppa:pcsx2-team/pcsx2-daily && \
+    apt-get update && \
+    apt-get install -y pcsx2
+
+# Re-install Nvidia driver (pcsx2 seems to need this)
+RUN /root/nvidia.run --accept-license --no-runlevel-check  --no-questions --ui=none --no-kernel-module --no-kernel-module-source --no-backup --tmpdir /tmp2
+
+# Create user
+#RUN groupadd -g 1000 -r kodi && useradd -u 1000 -r -g kodi -G audio,video kodi && \
+#    mkdir -p /home/kodi
+#RUN chown -R kodi:kodi /home/kodi
+
+#USER kodi
 
 ENTRYPOINT ["/usr/local/bin/kodi-standalone"]
 

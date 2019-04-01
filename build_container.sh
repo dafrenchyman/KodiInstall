@@ -14,5 +14,5 @@ wget https://raw.githubusercontent.com/mviereck/x11docker/master/x11docker -O /t
 sudo bash /tmp/x11docker --update
 rm /tmp/x11docker
 
-# Build the docker container
-sudo docker build --no-cache -t kodi .
+# Build the docker container #
+sudo docker build -t kodi .

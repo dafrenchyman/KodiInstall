@@ -2,4 +2,4 @@
 
 # Completely deletes de Kodi build directory
 
-rm -rf /home/kodi/kodi-build
+rm -rf /root/kodi-build
