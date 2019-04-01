@@ -83,17 +83,9 @@ mount_cifs () {
     local SHARE=$2
     local CIFS_USER=$3
     local CIFS_PASS=$4
-    shift
-    shift
-    shift
-    shift
-    local KODI_PROCESS_NAME=("$@")
-    for i in "${KODI_PROCESS_NAME[@]}"
-    do
-        echo "Docker image: ${i} share: $HOST/$SHARE"
-        mkdir -p ~/${KODI_RESOURCES}/$i/shares/$HOST/$SHARE
-        sudo mount -t cifs //$HOST/$SHARE/ ~/${KODI_RESOURCES}/$i/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
-    done
+    echo "Mounting share: $HOST/$SHARE"
+    mkdir -p ~/${KODI_RESOURCES}/shares/$HOST/$SHARE
+    sudo mount -t cifs //$HOST/$SHARE/ ~/${KODI_RESOURCES}/shares/$HOST/$SHARE -o user=$CIFS_USER,pass=$CIFS_PASS,vers=1.0,ro
 }
 
 
@@ -129,11 +121,10 @@ done
 copy_bioses ${KODI_DOCKER_NAMES[@]}
 
 # Open Media Vault Shares
-mount_cifs "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
-
+mount_cifs "openmediavault.local" "Anime_Disk18" "xbmc" "xbmc"
 
 # Minime Shares
-mount_cifs "minime.local" "snapdisk_8tb_03_shows" "xbmc" "xbmc" ${KODI_DOCKER_NAMES[@]}
+mount_cifs "minime.local" "snapdisk_8tb_03_shows" "xbmc" "xbmc"
 
 # Start up the different kodi instances
 for (( i = 0 ; i < ${#KODI_DOCKER_NAMES[@]} ; i=$i+1 ));
@@ -166,6 +157,7 @@ do
          -v /etc/localtime:/etc/localtime:ro \
          -v /dev/bus/usb:/dev/bus/usb \
          -v /dev/input:/dev/input \
+         -v $HOME/${KODI_RESOURCES}/shares:$HOME/shares \
          --link kodi-mariadb:mysql \
          -- kodi &
 
