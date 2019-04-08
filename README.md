@@ -1,4 +1,4 @@
-# Build docker container of Kodi with retroplayer Dolphin (Gamecube, Wii) and PCSX2 (Playstation 2)
+# Build docker container of Kodi with retroplayer, Dolphin (Gamecube, Wii) and PCSX2 (Playstation 2)
 
 The whole point of this repo is to try and package a complete media entertainment system in a docker container. Sort of like an Libreelec, but without dedicating a whole computer to it. The idea is you can hook up a TV to your main box and set it up on it's own `SCREEN` session (or multiple `SCREEN`s. I have this feeding my living room and office right now). The other thought is that since you're passing your beefy main box to it, why not use some powerful emulators on the box as well. 
 
